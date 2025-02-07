@@ -13,19 +13,21 @@ public class MicroServer {
     public static void main(String[] args) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException {
         loadComponents(args);
         System.out.println(simulateRequests("/greeting") + "\n");
-        System.out.println(simulateRequests("/pi"));
+        System.out.println(simulateRequests("/pi") + "\n");
+        System.out.println(simulateRequests("/e") + "\n");
     }
 
     private static void loadComponents(String[] args) throws ClassNotFoundException {
-        Class c = Class.forName(args[0]);
-
-        if(!c.isAnnotationPresent(RestController.class)){
-            System.exit(0);
-        }
-        for (Method mtd: c.getDeclaredMethods()){
-            if(mtd.isAnnotationPresent(GetMapping.class)) {
-                GetMapping a = mtd.getAnnotation(GetMapping.class);
-                services.put(a.value(), mtd);
+        for(String arg: args){
+            Class c = Class.forName(arg);
+            if (!c.isAnnotationPresent(RestController.class)) {
+                System.exit(0);
+            }
+            for (Method mtd : c.getDeclaredMethods()) {
+                if (mtd.isAnnotationPresent(GetMapping.class)) {
+                    GetMapping a = mtd.getAnnotation(GetMapping.class);
+                    services.put(a.value(), mtd);
+                }
             }
         }
     }

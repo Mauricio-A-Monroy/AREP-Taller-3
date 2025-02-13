@@ -1,7 +1,8 @@
 package edu.escuelaing.arep.microspring.controller;
 
-import edu.escuelaing.arep.microspring.GetMapping;
-import edu.escuelaing.arep.microspring.RestController;
+import edu.escuelaing.arep.microspring.annotation.GetMapping;
+import edu.escuelaing.arep.microspring.annotation.RequestParam;
+import edu.escuelaing.arep.microspring.annotation.RestController;
 
 @RestController
 public class MathController {
@@ -11,4 +12,8 @@ public class MathController {
         return Double.toString(Math.E);
     }
 
+    @GetMapping("/pi")
+    public static String pi(String name) {
+        return Double.toString(Math.PI);
+    }
 }

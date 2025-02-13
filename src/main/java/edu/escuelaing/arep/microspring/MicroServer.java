@@ -1,8 +1,10 @@
 package edu.escuelaing.arep.microspring;
 
+import edu.escuelaing.arep.microspring.annotation.GetMapping;
+import edu.escuelaing.arep.microspring.annotation.RestController;
+
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
@@ -16,11 +18,9 @@ public class MicroServer {
 
     public static void main(String[] args) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException {
         List<String> classNames = getClassesInPackage("edu.escuelaing.arep.microspring.controller");
-
         loadComponents(classNames.toArray(new String[0]));
-        System.out.println(simulateRequests("/greeting"));
-        System.out.println(simulateRequests("/pi") + "\n");
-        System.out.println(simulateRequests("/e") + "\n");
+
+
     }
 
     public static List<String> getClassesInPackage(String packageName) throws ClassNotFoundException {
@@ -57,15 +57,5 @@ public class MicroServer {
                 }
             }
         }
-    }
-
-    private static String simulateRequests(String route) throws InvocationTargetException, IllegalAccessException {
-        Method mtd = services.get(route);
-        String response = "HTTP/1.1 201 Created\r\n"
-                + "Content-Type: application/json\r\n"
-                + "\r\n"
-                + "{\"response\":" + mtd.invoke(null, "Alejo") + "\"}";
-
-        return response;
     }
 }

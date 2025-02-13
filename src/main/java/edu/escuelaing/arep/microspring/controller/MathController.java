@@ -1,4 +1,8 @@
-package edu.escuelaing.arep.microspring;
+package edu.escuelaing.arep.microspring.controller;
+
+import edu.escuelaing.arep.microspring.GetMapping;
+import edu.escuelaing.arep.microspring.RestController;
+
 @RestController
 public class MathController {
 

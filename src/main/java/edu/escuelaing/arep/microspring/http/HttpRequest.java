@@ -15,19 +15,23 @@ class HttpRequest {
     public String getPath() {
         return path;
     }
-    public String getValues(String var){
+
+    public String getQueryParam(String paramName) {
         if (query == null || query.isEmpty()) {
-            return null; // No hay parámetros
+            return null; // No hay parámetros en la consulta
         }
+
         String[] pairs = query.split("&"); // Divide cada "clave=valor"
         for (String pair : pairs) {
-            String[] keyValue = pair.split("=");
-            if (keyValue.length == 2 && keyValue[0].equals(var)) {
+            String[] keyValue = pair.split("=", 2); // Separa clave y valor (en caso de valores con '=')
+            if (keyValue.length == 2 && keyValue[0].equals(paramName)) {
                 return keyValue[1]; // Devuelve el valor si coincide la clave
             }
         }
-        return null;
+
+        return null; // Retorna null si no encuentra el parámetro
     }
+
 
     /**
      * @param path the path to set

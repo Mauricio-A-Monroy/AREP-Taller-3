@@ -2,10 +2,16 @@ package edu.escuelaing.arep.microspring;
 
 import edu.escuelaing.arep.microspring.annotation.GetMapping;
 import edu.escuelaing.arep.microspring.annotation.RestController;
+import edu.escuelaing.arep.microspring.http.HttpServer;
+
+import static edu.escuelaing.arep.microspring.http.HttpServer.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,20 +22,43 @@ public class MicroServer {
 
     public static Map<String, Method> services = new HashMap<>();
 
-    public static void main(String[] args) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+    public static void main(String[] args) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException, URISyntaxException, NoSuchMethodException, InstantiationException, IOException {
         List<String> classNames = getClassesInPackage("edu.escuelaing.arep.microspring.controller");
         loadComponents(classNames.toArray(new String[0]));
 
+        staticFiles("src/main/resources/static");
+        start();
 
     }
 
-    public static List<String> getClassesInPackage(String packageName) throws ClassNotFoundException {
+    private static void loadComponents(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+
+        for(String arg: args){
+            Class c = Class.forName(arg);
+            Object instance = c.getDeclaredConstructor().newInstance();
+            if (!c.isAnnotationPresent(RestController.class)) {
+                System.exit(0);
+            }
+            for (Method mtd : c.getDeclaredMethods()) {
+                if (mtd.isAnnotationPresent(GetMapping.class)) {
+                    GetMapping getMapping = mtd.getAnnotation(GetMapping.class);
+                    String route = getMapping.value();
+                    // Registrar la función en HttpServer
+                    get(route, instance, mtd);
+                }
+            }
+        }
+    }
+
+    public static List<String> getClassesInPackage(String packageName) throws URISyntaxException {
         List<String> classNames = new ArrayList<>();
         String path = packageName.replace('.', '/');
-        URL packageURL = Thread.currentThread().getContextClassLoader().getResource(path);
+
+        ClassLoader classLoader = MicroServer.class.getClassLoader();
+        URL packageURL = classLoader.getResource(path);
 
         if (packageURL != null) {
-            File directory = new File(packageURL.getFile());
+            File directory = new File(new URI(packageURL.toString()));
             if (directory.exists()) {
                 for (String fileName : directory.list()) {
                     if (fileName.endsWith(".class")) {
@@ -43,19 +72,4 @@ public class MicroServer {
         return classNames;
     }
 
-    private static void loadComponents(String[] args) throws ClassNotFoundException {
-        System.out.println(args[0]);
-        for(String arg: args){
-            Class c = Class.forName(arg);
-            if (!c.isAnnotationPresent(RestController.class)) {
-                System.exit(0);
-            }
-            for (Method mtd : c.getDeclaredMethods()) {
-                if (mtd.isAnnotationPresent(GetMapping.class)) {
-                    GetMapping a = mtd.getAnnotation(GetMapping.class);
-                    services.put(a.value(), mtd);
-                }
-            }
-        }
-    }
 }

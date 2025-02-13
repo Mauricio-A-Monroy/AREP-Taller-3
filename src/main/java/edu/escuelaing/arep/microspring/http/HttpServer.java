@@ -1,13 +1,18 @@
 package edu.escuelaing.arep.microspring.http;
 
+import edu.escuelaing.arep.microspring.annotation.RequestParam;
+
+import java.lang.reflect.Method;
 import java.net.*;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.lang.reflect.Parameter;
 
 public class HttpServer {
-    private static Map<String,BiFunction<HttpRequest, HttpResponse, String>> servicios = new HashMap();
+    //private static Map<String,BiFunction<HttpRequest, HttpResponse, String>> servicios = new HashMap();
+    private static Map<String,ServiceHandler> servicios = new HashMap<>();
     private static String staticFilePath = "src/main/resources/static";;
 
     public static void start() throws IOException, URISyntaxException {
@@ -91,29 +96,59 @@ public class HttpServer {
         }
         serverSocket.close();
     }
-    public static void get(String route, BiFunction<HttpRequest, HttpResponse, String> s){
+    public static void get(String route, Object object, Method method ){
         System.out.println("route: " + route);
-        servicios.put("/app" + route, s);
+        servicios.put("/app" + route, new ServiceHandler(object, method));
     }
 
 
-    private static HttpResponse  processRequest(HttpRequest req) {
+    private static HttpResponse processRequest(HttpRequest req) {
         HttpResponse response = new HttpResponse(200, "OK");
         System.out.println("Query: " + req.getQuery());
         System.out.println("Path: " + req.getPath());
-        BiFunction<HttpRequest, HttpResponse, String> s = servicios.get(req.getPath());
 
-        if (s != null) {
-            String responseBody = s.apply(req, response);
-            response.setBody("{\"response\":\"" + responseBody + "\"}", "application/json");
+        ServiceHandler handler = servicios.get(req.getPath());
+
+        if (handler != null) {
+            try {
+                String responseBody = invokeControllerMethod(handler.getInstance(), handler.getMethod(), req);
+                response.setBody("{\"response\":\"" + responseBody + "\"}", "application/json");
+            } catch (Exception e) {
+                e.printStackTrace();
+                response = new HttpResponse(500, "Internal Server Error");
+                response.setBody("{\"error\":\"Internal Server Error\"}", "application/json");
+            }
         } else {
             response = new HttpResponse(404, "Not Found");
             response.setBody("<h1>404 Not Found</h1>", "text/html");
         }
-        return response;
 
+        return response;
     }
-    public static void staticfiles(String path){
+
+
+    private static String invokeControllerMethod(Object instance, Method method, HttpRequest req) throws Exception {
+        Parameter[] parameters = method.getParameters();
+        Object[] args = new Object[parameters.length];
+
+        for (int i = 0; i < parameters.length; i++) {
+            Parameter param = parameters[i];
+            if (param.isAnnotationPresent(RequestParam.class)) {
+                RequestParam requestParam = param.getAnnotation(RequestParam.class);
+                String paramName = requestParam.value();
+                String paramValue = req.getQueryParam(paramName);
+
+                if (paramValue == null || paramValue.isEmpty()) {
+                    paramValue = requestParam.defaultValue(); // Usa el valor por defecto
+                }
+                args[i] = paramValue;
+            }
+        }
+
+        return (String) method.invoke(instance, args);
+    }
+
+    public static void staticFiles(String path){
         staticFilePath = path;
     }
 

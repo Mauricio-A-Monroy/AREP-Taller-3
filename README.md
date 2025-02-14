@@ -160,16 +160,6 @@ Prueba de funcionamiento de las pruebas automatizadas
 
 ---
 
-## Contribución
-Si deseas contribuir:
-1. Haz un fork del repositorio.
-2. Crea una rama (`git checkout -b feature-nueva`).
-3. Realiza tus cambios y haz commit (`git commit -m 'Agrega nueva funcionalidad'`).
-4. Sube tus cambios (`git push origin feature-nueva`).
-5. Abre un Pull Request.
-
----
-
 ## Autores
 - **Mauricio Alejandro Monroy Jiménez** - Desarrollo e implementación.
 ---
